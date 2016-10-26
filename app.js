@@ -121,16 +121,22 @@ app.post("/bqgdelt", function(req, res) {
 
       mybq.queryGdelt(req.body, function(err,rows){
 
-       console.log("Big Query Status: " + err + "\n");
+       if(err != null) {
+        console.log("Big Query Status: " + err + "\n");
+        res.send("bqerror");
+        res.end();
+      } else {
 
-       var dataDescription = "gdeltlive.txt";   // TODO get this name from mybq
+          var dataDescription = "gdeltlive.txt";   // TODO get this name from mybq
 
-       mybq.makeEventsJsonArray(dataDescription, rows, function(eventsRes) {
-          res.send(eventsRes);
-          res.end();
-       });
+          mybq.makeEventsJsonArray(dataDescription, rows, function(eventsRes) {
+              res.send(eventsRes);
+              res.end();
+          });
+      }
 
-     })
+     });
+      
   } else {   //end keycheck
     res.send("bad key");
     res.end();

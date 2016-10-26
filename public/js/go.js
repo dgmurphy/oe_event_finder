@@ -219,6 +219,13 @@ function printResponse(resp) {
         return;
     }
 
+    if (resp == "bqerror") {
+        $("#bqgdeltbtn").prop("disabled", false);
+        $("#bqgdeltbtn").css("background-color", "red");
+        $("#bqgdeltbtn").html("OVER QUOTA");
+        return;
+    }
+
     drawDots(resp.events);
 
     $('#resultsText').html("<strong>Results: </strong>" + resp.status);

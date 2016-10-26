@@ -176,7 +176,7 @@ function initPmequalizer() {
      // Scale slider
      $("#scaleSlider").slider({
         value: 16000,
-        min: 2000,
+        min: 500,
         max: 40000
      });
 }
@@ -320,8 +320,8 @@ function getDotSize(tone) {
     // Convert to meters
     var dotScale = $( "#scaleSlider" ).slider( "option", "value" );
     var dotSize = dotScale * toneMag;
-    if (dotSize < 12000)
-        dotSize = 12000;
+    if (dotSize < 500)
+        dotSize = 500;
 
     return dotSize;
 }

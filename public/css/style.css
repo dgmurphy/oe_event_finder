@@ -542,6 +542,10 @@ tr .descriptioncode {
   font-size: 16px;
 }
 
+.icon-link:active, .icon-info:active {
+  stroke: blue;
+  fill: blue;}
+
 #eventsDiv {
   margin-top: 10px;
 }

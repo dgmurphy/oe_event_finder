@@ -177,7 +177,7 @@ function initPmequalizer() {
      $("#scaleSlider").slider({
         value: 16000,
         min: 500,
-        max: 40000
+        max: 30000
      });
 }
 

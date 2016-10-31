@@ -91,6 +91,14 @@ $(document).ready(function () {
         changeMarkerScale();
     });
 
+    $("#gsRadio").bind('change', function() {
+        changeMarkerData();
+    });
+
+    $("#toneRadio").bind('change', function() {
+        changeMarkerData();
+    });
+
     // Tooltips
     $( document ).tooltip();
 
@@ -238,11 +246,6 @@ function printResponse(resp) {
 
     barChart(resp.phist);
 
-    //$('#legend').css("display", "block");
-
-    // Auto adjusts the filters based on the scores
-    //updateFilterPresets(resp);
-
     enableForms();
 }
 
@@ -254,8 +257,8 @@ function drawDots (pointsArray) {
 
     pointsArray.forEach(function (point) {
 
-        //Only render if we have location and tone data
-        if ( (point.lat) && (point.long) && (point.tone) ) {
+        //Only render if we have location and tone and goldstein data
+        if ( (point.lat) && (point.long) && (point.tone) && (point.goldstein) ) {
             makeDot(point);
             ++eventsDrawn;
         }
@@ -271,8 +274,19 @@ function drawDots (pointsArray) {
 
 function makeDot(point) {
 
-    dotColor = getDotColor(point);
-    dotSize = getDotSize(point.tone);
+    // Are we drawing tone or Golstein Scale?
+    var usingGS =  $('#gsRadio').is(':checked');
+
+    if (usingGS) {
+
+        dotColor = getDotColor(point.goldstein, 'goldstein');
+        dotSize = getDotSize(point.goldstein);
+
+    } else {
+
+        dotColor = getDotColor(point.tone, 'tone');
+        dotSize = getDotSize(point.tone);
+    }
 
     var circle = L.circle([point.lat, point.long], {
         color: dotColor,
@@ -280,12 +294,12 @@ function makeDot(point) {
         fillColor: dotColor,
         fillOpacity: 0.1,
         radius: dotSize,
-        className: dotColor,
         tone: point.tone,
         pmesiiScore: point.pmesiiscore,
         visible: true,
         globaleventid: point.globaleventid,
-        sourcefile: point.sourcefile
+        sourcefile: point.sourcefile,
+        goldstein: point.goldstein
     }).addTo(mapGlobal);
 
 
@@ -298,21 +312,31 @@ function makeDot(point) {
 
 }
 
-function getDotColor(point) {
+function getDotColor(metric, type) {
 
-    // Green for positive tone, red for negative
-    var tone = point.tone;
-    var color = "blue";
-    if(tone < 0.0) {
-        color = "red";
+    var color ="black";
+    if (metric == 0) 
+        return color;
+
+    if (type == "tone") {
+        color = "blue";
+        if(metric < 0.0) {
+            color = "red";
+        }
+    } else {  // goldstein
+        color = "green";
+        if(metric < 0.0) {
+            color = "orange";
+        }       
     }
+
     return color;
 }
 
-function getDotSize(tone) {
+function getDotSize(metric) {
 
 
-    var toneMag = Math.abs(tone);
+    var toneMag = Math.abs(metric);
 
     //GDLET: Tone magnitude can vary from 0 100 but 0 to 10 is common
     // So clamp it from 1 to 10
@@ -430,8 +454,16 @@ function filterEvents() {
             }
         }
 
-        // Tone sign filter
-        if ( (c.options.tone < 0) && !showNeg )  {
+
+        // -------  Tone sign filter -----------
+        var tsVal = 0;
+        if ( $('#toneRadio').is(':checked'))
+            tsVal = c.options.tone;
+        else
+            tsVal = c.options.goldstein;
+
+        
+        if ( (tsVal < 0) && !showNeg )  {
             turnOn = false;
             if (c.options.visible) {
                 mapGlobal.removeLayer(circlesArr[i]);
@@ -439,13 +471,14 @@ function filterEvents() {
             }
         } 
 
-        if ( (c.options.tone > 0) && !showPos )  {
+        if ( (tsVal > 0) && !showPos )  {
             turnOn = false;
             if (c.options.visible) {
                 mapGlobal.removeLayer(circlesArr[i]);
                 c.options.visible = false;
             }
         } 
+        // -- end tone sign filter 
       
 
 
@@ -634,6 +667,7 @@ var div = d3.select("body").append("div")
 }
 
 function circleClicked(me) {
+
     
     var selectedEvents = [];
     
@@ -758,6 +792,7 @@ function getEventDetails (resp) {
             ev.actor2 += "." + rev.Actor2Type3Code;
 
         ev.tone = parseFloat(rev.AvgTone).toFixed(3);
+        ev.goldstein = parseFloat(rev.GoldsteinScale).toFixed(3);
 
         // only add unique URLs
         if ( !hasURL(evArr, ev.url))
@@ -775,6 +810,7 @@ function getEventDetails (resp) {
                             "<th>Actor&nbsp;1</th>" +
                             "<th>Actor&nbsp;2</th>" +
                             "<th>Tone</th>" +
+                            "<th>G.S.</th>" +
                         "</tr>";
 
     $("#eventsTable").append(tableHeader);
@@ -800,6 +836,7 @@ function getEventDetails (resp) {
         trow += "<td>" + evt.actor1 + "</td>";
         trow += "<td>" + evt.actor2 + "</td>";
         trow += "<td>" + evt.tone + "</td>";
+        trow += "<td>" + evt.goldstein + "</td>";
         trow += "</tr>";
 
         $("#eventsTable tr:last").after(trow);
@@ -905,5 +942,58 @@ function showEventModal(html, ccode) {
       }
     });
 
+
+}
+
+function changeMarkerData() {
+
+    //var mdata = $('input[name=markerdata]:checked', '#markerDataForm').val()
+     var usingGS =  $('#gsRadio').is(':checked');
+
+    if (usingGS) {
+        $("#toneLabel").html("G.S. mag:&nbsp;&nbsp;");
+        $("#toneSignLabel").html("G.S. sign&nbsp;&nbsp;");
+        redrawUsingGoldstein();
+    } else {
+        $("#toneLabel").html("Tone mag:");
+        $("#toneSignLabel").html("Tone sign"); 
+        redrawUsingTone();
+    }
+
+    
+}
+
+function redrawUsingGoldstein() {
+
+    // draw visible circles with new color and scale
+    for (var j = 0; j < circlesArr.length; ++j) {
+
+        var gs = circlesArr[j].options.goldstein;
+
+        var newRad = getDotSize(gs);
+        circlesArr[j].setRadius(newRad);
+
+        var newColor = getDotColor(gs, 'goldstein')
+        circlesArr[j].setStyle({fillColor : newColor}); 
+
+    }
+
+}
+
+
+function redrawUsingTone() {
+
+    // draw visible circles with new color and scale
+    for (var j = 0; j < circlesArr.length; ++j) {
+
+        var tone = circlesArr[j].options.tone;
+
+        var newRad = getDotSize(tone);
+        circlesArr[j].setRadius(newRad);
+
+        var newColor = getDotColor(tone, 'tone')
+        circlesArr[j].setStyle({fillColor : newColor}); 
+
+    }
 
 }

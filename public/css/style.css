@@ -642,3 +642,17 @@ tr .descriptioncode {
     font-weight: bold;
     color: steelblue;
   }
+
+  #markerData {
+    margin-top: 10px;
+  }
+
+  input[type="radio"] {
+    margin-top: 8px;
+    margin-left: 8px;
+  }
+
+#markerDataForm {
+  display: inline;
+}
+  

@@ -145,7 +145,7 @@
 				</div>
 
 				<div id="toneSign">
-					Tone sign:
+					<span id="toneSignLabel">Tone sign:</span>
 					<span id="signInput">   
 						<label><input checked type="checkbox" id="tpos" value="tpos">&nbsp;Positive</label>
 						<label><input checked type="checkbox" id="tneg" value="tneg">&nbsp;Negative</label>
@@ -166,6 +166,15 @@
 				<div id="markerScale" class="scaleSliderDiv">
 					Marker Scale:<span id="scaleSlider"></span>
 					<button class="send" id="applyScaleBtn">Apply</button>
+				</div>
+
+				<div id="markerData" class="markerDataDiv">
+					Marker:&nbsp;&nbsp;
+					 <form id="markerDataForm">
+					  	<input id="toneRadio" type="radio" name="markerdata" value="Tone" checked> Avg. Tone
+					  	&nbsp;&nbsp;
+					  	<input id="gsRadio" type="radio" name="markerdata" value="Goldstein"> Goldstein Scale	
+					 </form>  			
 				</div>
 
 

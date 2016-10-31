@@ -226,6 +226,12 @@ function printResponse(resp) {
         return;
     }
 
+    if (resp.toString().toLowerCase().startsWith("error")) {
+        var msg = "  Try clearing the cache and reloading. Don't forget to send Doug some hatemail also.";
+        alert(resp + msg);
+        return;
+    }
+
     drawDots(resp.events);
 
     $('#resultsText').html("<strong>Results: </strong>" + resp.status);
@@ -714,6 +720,12 @@ function hasURL(evArr, evurl) {
 }
 
 function getEventDetails (resp) {
+
+    if (resp.toString().toLowerCase().startsWith("error")) {
+        console.log("Error getting event details");
+        alert("Error getting event details. Try clearing the cache and reloading the page.");
+        return;
+    }
 
     eventDetailsArr = resp;
 

@@ -36,25 +36,33 @@ app.post("/bqgdeltmock", function(req, res) {
 
   mybq.queryGdeltMock(datafile, function(err, rows) {
 
-    console.log("Mock Big Query Status: " + err + "\n");
-
-    rows.forEach(function(row) {
-      var str = '';
-      for (var key in row) {
-        if (str) {
-          str += '\t';
-        }
-        str += key + ': ' + row[key];
-      }
-    })
-
-   var dataDescription = datafile;
-   mybq.makeEventsJsonArray(dataDescription, rows, function(eventsRes) {
-      res.send(eventsRes);
+    if (err != null) {
+      var msg = "Error: Could not load datafile: " + datafile;
+      res.send(msg);
       res.end();
-   });
 
-  })
+    } else {
+
+      console.log("Mock Big Query Status: " + err + "\n");
+
+      rows.forEach(function(row) {
+        var str = '';
+        for (var key in row) {
+          if (str) {
+            str += '\t';
+          }
+          str += key + ': ' + row[key];
+        }
+      })
+
+      var dataDescription = datafile;
+      mybq.makeEventsJsonArray(dataDescription, rows, function(eventsRes) {
+        res.send(eventsRes);
+        res.end();
+      });
+    }
+
+  });
   
 });
 
@@ -93,8 +101,13 @@ app.post("/eventdetails", function(req, res) {
   });
 
   // Each entry in rows here will have all the GDELT columns
-  mybq.buildFullEventsArray(eventLookup, function(rows) {
-    res.send(rows);
+  mybq.buildFullEventsArray(eventLookup, function(err, rows) {
+
+    if(err != null) {
+      res.send("Error: Could not build full events array.");
+    } else {
+      res.send(rows);
+    }
   });
 
 });
